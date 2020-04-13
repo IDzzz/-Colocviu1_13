@@ -2,7 +2,10 @@ package ro.pub.cs.systems.eim.Colocviu1_13;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -15,10 +18,13 @@ public class Colocviu1_13MainActivity extends AppCompatActivity {
     private Button north_button, east_button, south_button, west_button, navigate_button;
     private int cardinals_count = 0;
 
+    private int serviceStatus = Constants.SERVICE_STOPPED;
+
+    private IntentFilter intentFilter = new IntentFilter();
+
     private ButtonClickListener buttonClickListener = new ButtonClickListener();
 
     private class ButtonClickListener implements View.OnClickListener {
-
         @Override
         public void onClick(View view) {
             switch (view.getId()) {
@@ -54,11 +60,27 @@ public class Colocviu1_13MainActivity extends AppCompatActivity {
                     cardinalTextView.setText("");
                     break;
             }
+
+            if (cardinals_count >= 4) {
+                Intent intent = new Intent(getApplicationContext(), Colocviul_13Service.class);
+                intent.putExtra(Constants.CARDINALS_TEXT, cardinalTextView.getText().toString());
+                getApplicationContext().startService(intent);
+                serviceStatus = Constants.SERVICE_STARTED;
+            }
+        }
+    }
+
+    private MessageBroadcastReceiver messageBroadcastReceiver = new MessageBroadcastReceiver();
+    private class MessageBroadcastReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(Constants.BROADCAST_RECEIVER_TAG, intent.getStringExtra(Constants.BROADCAST_RECEIVER_EXTRA));
         }
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_colocviu1_13_main);
 
         cardinalTextView = (TextView) findViewById(R.id.cardinals_text_view);
@@ -84,7 +106,7 @@ public class Colocviu1_13MainActivity extends AppCompatActivity {
                 cardinals_count = savedInstanceState.getInt(Constants.CARDINALS_COUNT);
             }
         }
-        super.onCreate(savedInstanceState);
+        intentFilter.addAction(Constants.ACTION_TYPE);
     }
 
     @Override
@@ -100,6 +122,28 @@ public class Colocviu1_13MainActivity extends AppCompatActivity {
             Log.d("Saved number", "Count= " + cardinals_count);
             cardinals_count = savedInstanceState.getInt(Constants.CARDINALS_COUNT);
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        registerReceiver(messageBroadcastReceiver, intentFilter);
+    }
+
+    @Override
+    protected void onPause() {
+        unregisterReceiver(messageBroadcastReceiver);
+        super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (serviceStatus == Constants.SERVICE_STARTED) {
+            Intent intent = new Intent(this, Colocviul_13Service.class);
+            stopService(intent);
+        }
+
+        super.onDestroy();
     }
 
     @Override

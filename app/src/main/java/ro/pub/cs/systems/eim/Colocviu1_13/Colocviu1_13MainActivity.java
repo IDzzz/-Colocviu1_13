@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class Colocviu1_13MainActivity extends AppCompatActivity {
     private TextView cardinalTextView;
@@ -45,17 +46,22 @@ public class Colocviu1_13MainActivity extends AppCompatActivity {
                     cardinalTextView.append(west_button.getText());
                     cardinals_count++;
                     break;
+                case R.id.navigate_button:
+                    Intent intent = new Intent(getApplicationContext(), Colocviul1_13SecondaryActivity.class);
+                    intent.putExtra(Constants.CARDINALS_TEXT, cardinalTextView.getText().toString());
+                    startActivityForResult(intent, Constants.SECONDARY_ACTIVITY_REQUEST_CODE);
+                    cardinals_count = 0;
+                    cardinalTextView.setText("");
+                    break;
             }
         }
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_colocviu1_13_main);
 
         cardinalTextView = (TextView) findViewById(R.id.cardinals_text_view);
-
 
         north_button = (Button) findViewById(R.id.north_button);
         north_button.setOnClickListener(buttonClickListener);
@@ -78,6 +84,7 @@ public class Colocviu1_13MainActivity extends AppCompatActivity {
                 cardinals_count = savedInstanceState.getInt(Constants.CARDINALS_COUNT);
             }
         }
+        super.onCreate(savedInstanceState);
     }
 
     @Override
@@ -85,7 +92,6 @@ public class Colocviu1_13MainActivity extends AppCompatActivity {
         super.onSaveInstanceState(savedInstanceState);
         savedInstanceState.putInt(Constants.CARDINALS_COUNT, cardinals_count);
         Log.d("Save number now", "Count= " + cardinals_count);
-
     }
 
     @Override
@@ -93,6 +99,17 @@ public class Colocviu1_13MainActivity extends AppCompatActivity {
         if (savedInstanceState.containsKey(Constants.CARDINALS_COUNT)) {
             Log.d("Saved number", "Count= " + cardinals_count);
             cardinals_count = savedInstanceState.getInt(Constants.CARDINALS_COUNT);
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        if (requestCode == Constants.SECONDARY_ACTIVITY_REQUEST_CODE) {
+            if (resultCode == 1) {
+                Toast.makeText(this, "Register", Toast.LENGTH_LONG).show();
+            } else if (resultCode == -1) {
+                Toast.makeText(this, "Cancel", Toast.LENGTH_LONG).show();
+            }
         }
     }
 }
